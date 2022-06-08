@@ -130,6 +130,17 @@ func (c *ControlPacket) PacketType() string {
 	}[c.FixedHeader.Type]
 }
 
+var ProtocolVersion byte = 5
+
+func getProtocolVersion() byte {
+	switch ProtocolVersion {
+	case 4, 5:
+	default:
+		ProtocolVersion = 5
+	}
+	return ProtocolVersion
+}
+
 // NewControlPacket takes a packetType and returns a pointer to a
 // ControlPacket where the VariableHeader field is a pointer to an
 // instance of a VariableHeader definition for that packetType
@@ -139,7 +150,7 @@ func NewControlPacket(t byte) *ControlPacket {
 	case CONNECT:
 		cp.Content = &Connect{
 			ProtocolName:    "MQTT",
-			ProtocolVersion: 5,
+			ProtocolVersion: getProtocolVersion(),
 			Properties:      &Properties{},
 		}
 	case CONNACK:

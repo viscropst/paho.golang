@@ -20,6 +20,7 @@ func main() {
 	clientid := flag.String("clientid", "", "A clientid for the connection")
 	username := flag.String("username", "", "A username to authenticate to the MQTT server")
 	password := flag.String("password", "", "Password to match username")
+	version := flag.Uint("version", uint(paho.MQTTv5), "Version of MQTT Protocol")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "SUB: ", log.LstdFlags)
@@ -55,7 +56,7 @@ func main() {
 		cp.PasswordFlag = true
 	}
 
-	ca, err := c.Connect(context.Background(), cp)
+	ca, err := c.Connect(context.Background(), cp, paho.MQTTVersion(*version))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -85,7 +86,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if sa.Reasons[0] != byte(*qos) {
+	if len(sa.Reasons) > 0 && sa.Reasons[0] != byte(*qos) {
 		log.Fatalf("Failed to subscribe to %s : %d", *topic, sa.Reasons[0])
 	}
 	log.Printf("Subscribed to %s", *topic)

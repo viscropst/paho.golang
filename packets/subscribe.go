@@ -102,6 +102,10 @@ func (s *Subscribe) Buffers() net.Buffers {
 		writeString(t, &subs)
 		subs.WriteByte(o.Pack())
 	}
+
+	if ProtocolVersion < 5 {
+		return net.Buffers{b.Bytes(), subs.Bytes()}
+	}
 	idvp := s.Properties.Pack(SUBSCRIBE)
 	propLen := encodeVBI(len(idvp))
 	return net.Buffers{b.Bytes(), propLen, idvp, subs.Bytes()}

@@ -158,18 +158,28 @@ func (c *Connect) Buffers() net.Buffers {
 	cp.WriteByte(c.ProtocolVersion)
 	cp.WriteByte(c.PackFlags())
 	writeUint16(c.KeepAlive, &cp)
-	idvp := c.Properties.Pack(CONNECT)
-	encodeVBIdirect(len(idvp), &cp)
-	cp.Write(idvp)
+
+	if c.ProtocolVersion == 0 {
+		c.ProtocolVersion = getProtocolVersion()
+	}
+
+	if c.ProtocolVersion == 5 {
+		idvp := c.Properties.Pack(CONNECT)
+		encodeVBIdirect(len(idvp), &cp)
+		cp.Write(idvp)
+	}
 
 	writeString(c.ClientID, &cp)
-	if c.WillFlag {
+	if c.WillFlag && c.ProtocolVersion == 5 {
 		willIdvp := c.WillProperties.Pack(CONNECT)
 		encodeVBIdirect(len(willIdvp), &cp)
 		cp.Write(willIdvp)
+	}
+	if c.WillFlag {
 		writeString(c.WillTopic, &cp)
 		writeBinary(c.WillMessage, &cp)
 	}
+
 	if c.UsernameFlag {
 		writeString(c.Username, &cp)
 	}
@@ -182,6 +192,9 @@ func (c *Connect) Buffers() net.Buffers {
 
 // WriteTo is the implementation of the interface required function for a packet
 func (c *Connect) WriteTo(w io.Writer) (int64, error) {
+	if c.ProtocolVersion == 0 {
+		c.ProtocolVersion = getProtocolVersion()
+	}
 	cp := &ControlPacket{FixedHeader: FixedHeader{Type: CONNECT}}
 	cp.Content = c
 

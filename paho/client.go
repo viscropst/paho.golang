@@ -165,7 +165,7 @@ func NewClient(conf ClientConfig) *Client {
 // successfully the rest of the client is initiated and the Connack
 // returned. Otherwise the failure Connack (if there is one) is returned
 // along with an error indicating the reason for the failure to connect.
-func (c *Client) Connect(ctx context.Context, cp *Connect) (*Connack, error) {
+func (c *Client) Connect(ctx context.Context, cp *Connect, ver ...MQTTVersion) (*Connack, error) {
 	if c.Conn == nil {
 		return nil, fmt.Errorf("client connection is nil")
 	}
@@ -209,7 +209,11 @@ func (c *Client) Connect(ctx context.Context, cp *Connect) (*Connack, error) {
 
 	ccp := cp.Packet()
 	ccp.ProtocolName = "MQTT"
-	ccp.ProtocolVersion = 5
+	if len(ver) > 0 {
+		packets.ProtocolVersion = byte(ver[0])
+	} else {
+		packets.ProtocolVersion = byte(MQTTv5)
+	}
 
 	c.debug.Println("sending CONNECT")
 	if _, err := ccp.WriteTo(c.Conn); err != nil {
